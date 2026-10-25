@@ -1,0 +1,34 @@
+[package]
+name = "atcoder"
+version = "0.0.0"
+edition = "2024"
+license = "0BSD"
+repository = "https://github.com/Yu-yu0202/atcoder"
+readme = "README.md"
+
+[dependencies]
+num-traits = "0.2.19"
+
+[lints.rust]
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+missing_copy_implementations = "warn"
+unreachable_pub = "warn"
+unnameable_types = "warn"
+unsafe_op_in_unsafe_fn = "warn"
+unused_results = "warn"
+
+[lints.clippy]
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+doc_markdown = "warn"
+doc_comment_double_space_linebreaks = "warn"
+undocumented_unsafe_blocks = "warn"
+must_use_candidate = "warn"
+missing_const_for_fn = "warn"
+
+[lints.rustdoc]
+unescaped_backticks = "warn"
+missing_crate_level_docs = "warn"
+broken_intra_doc_links = "warn"
+private_intra_doc_links = "warn"
