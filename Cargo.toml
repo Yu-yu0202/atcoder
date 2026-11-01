@@ -7,7 +7,7 @@ repository = "https://github.com/Yu-yu0202/atcoder"
 readme = "README.md"
 
 [dependencies]
-num-traits = "0.2.19"
+num-traits = "=0.2.19"
 
 [lints.rust]
 missing_docs = "warn"
