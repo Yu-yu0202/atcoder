@@ -27,6 +27,7 @@ pub trait RandBackend: Sized {
 /// assert_eq!(rng.next_bool(), false);
 /// assert_eq!(rng.next_f64(), 0.27860113025513866);
 /// ```
+#[repr(transparent)]
 #[derive(Clone, Debug)]
 pub struct Rand<R: RandBackend>(R);
 
