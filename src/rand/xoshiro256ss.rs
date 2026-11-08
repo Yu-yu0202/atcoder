@@ -29,3 +29,30 @@ impl RandBackend for Xoshiro256StarStar {
         result
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reference_sequence() {
+        const EXPECTED: [u64; 10] = [
+            11520,
+            0,
+            1509978240,
+            1215971899390074240,
+            1216172134540287360,
+            607988272756665600,
+            16172922978634559625,
+            8476171486693032832,
+            10595114339597558777,
+            2904607092377533576,
+        ];
+
+        let mut rng = Xoshiro256StarStar([1, 2, 3, 4]);
+
+        for expected in EXPECTED {
+            assert_eq!(rng.next_u64(), expected);
+        }
+    }
+}
