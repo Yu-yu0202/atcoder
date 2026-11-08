@@ -4,6 +4,7 @@ pub mod fraction;
 pub mod gcd_lcm;
 pub mod modulo;
 pub mod prime;
+pub mod algebra;
 
 /// Prelude for [`crate::math`]
 pub mod prelude {
