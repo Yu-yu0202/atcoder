@@ -1,9 +1,29 @@
 //! いもす法
+//!
+//! 同じ区間への加算を繰り返した結果の配列を、差分配列を使って効率よく求める
+//! [`Imos`] を提供する。区間に対する加算を多くこなす問題で、素朴に各要素へ
+//! 書き込むと O(加算回数 × 区間長) かかるところを、差分と累積和で高速化する。
 
 use crate::ext::range_ext::RangeExt;
 use std::ops::{AddAssign, Deref, DerefMut, SubAssign};
 
 /// いもす法
+///
+/// 長さ `n + 1` の差分配列を内部に持ち、[`Imos::add`] で区間に値を加え、
+/// [`Imos::build`] で累積和を取った長さ `n` の配列を得る。
+/// 加算は負の値でも動作する（差分の減算として扱われる）。
+///
+/// # Examples
+/// ```
+/// use atcoder::data_structure::imos::Imos;
+///
+/// let mut imos = Imos::<i64>::new(6);
+/// imos.add(0..3, 2);
+/// imos.add(2..=4, 1);
+/// imos.add(4..6, -3);
+///
+/// assert_eq!(imos.build(), vec![2, 2, 3, 1, -2, -3]);
+/// ```
 #[repr(transparent)]
 #[derive(Clone, Debug)]
 pub struct Imos<T: Copy + Default + AddAssign + SubAssign>(Vec<T>);
@@ -16,6 +36,13 @@ impl<T: Copy + Default + AddAssign + SubAssign> Imos<T> {
     }
 
     /// 指定された範囲 `range` に `value` を加える。
+    ///
+    /// `range` は [`crate::ext::range_ext::RangeExt`] を受け取るので、
+    /// 半開区間 `..` と閉区間 `..=` のどちらでも指定できる。負の `value` も
+    /// 差分の減算として正しく扱われる。
+    ///
+    /// # 計算量
+    /// 時間 O(1)
     pub fn add<R>(&mut self, range: R, value: T)
     where
         R: RangeExt<usize>,
@@ -27,6 +54,13 @@ impl<T: Copy + Default + AddAssign + SubAssign> Imos<T> {
     }
 
     /// 差分配列を確定し、累積配列を返す。
+    ///
+    /// 各位置の値を「それまでの差分の和」で更新し、[`Imos::add`] で加えた値が
+    /// 実際に載った長さ `n` の [`Vec`] を返す（先頭の余分な 0 は落とされる）。
+    /// このメソッドは `self` を消費する。
+    ///
+    /// # 計算量
+    /// 時間 O(n)
     #[must_use]
     pub fn build(mut self) -> Vec<T> {
         for i in 1..self.0.len() {
@@ -44,12 +78,14 @@ impl<T: Copy + Default + AddAssign + SubAssign> Imos<T> {
 impl<T: Copy + Default + AddAssign + SubAssign> Deref for Imos<T> {
     type Target = [T];
 
+    /// 内部の差分配列をスライスとして借用する。
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
 impl<T: Copy + Default + AddAssign + SubAssign> DerefMut for Imos<T> {
+    /// 内部の差分配列を可変スライスとして借用する。
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -59,6 +95,7 @@ impl<T: Copy + Default + AddAssign + SubAssign> IntoIterator for Imos<T> {
     type Item = T;
     type IntoIter = std::vec::IntoIter<T>;
 
+    /// 差分配列を値のイテレータに変換する。
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
@@ -68,6 +105,7 @@ impl<'a, T: Copy + Default + AddAssign + SubAssign> IntoIterator for &'a Imos<T>
     type Item = &'a T;
     type IntoIter = std::slice::Iter<'a, T>;
 
+    /// 差分配列を参照のイテレータに変換する。
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
     }
@@ -77,18 +115,21 @@ impl<'a, T: Copy + Default + AddAssign + SubAssign> IntoIterator for &'a mut Imo
     type Item = &'a mut T;
     type IntoIter = std::slice::IterMut<'a, T>;
 
+    /// 差分配列を可変参照のイテレータに変換する。
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter_mut()
     }
 }
 
 impl<T: Copy + Default + AddAssign + SubAssign> AsRef<[T]> for Imos<T> {
+    /// 差分配列を不変スライスとして扱えるようにする。
     fn as_ref(&self) -> &[T] {
         &self.0
     }
 }
 
 impl<T: Copy + Default + AddAssign + SubAssign> AsMut<[T]> for Imos<T> {
+    /// 差分配列を可変スライスとして扱えるようにする。
     fn as_mut(&mut self) -> &mut [T] {
         &mut self.0
     }

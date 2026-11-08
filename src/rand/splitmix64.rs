@@ -1,17 +1,55 @@
-//! `SplitMix64` の実装
+//! `SplitMix64` のアルゴリズム
+//!
+//! Steele の SplitMix64 は、64bit のカウンタを黄金比の定数
+//! `0x9e3779b97f4a7c15`（√5 - 1 を 64bit に近似したもの）だけ進める。
+//! 生成されるビット列を変形する。
+//!
+//! - 状態は `u64` 1 個だけで、seed をそのまま state として使い回す。
+//! - 速度より品質を優先しており、低次元（少数の乱数を取り出すだけ）の用途では
+//!   分布が非常に良い。
+//! - 巨大な配列を作る用途では [`Xoshiro256StarStar`](crate::rand::xoshiro256ss::Xoshiro256StarStar)
+//!   のほうが向く（速度の差があるため）。
+//!
+//! [`RandBackend`] を実装しているので、普通は
+//! [`Rand<SplitMix64>`](crate::rand::Rand) で包んで使う。
 
 use crate::rand::RandBackend;
 
-/// `SplitMix64` のバックエンド
+/// `SplitMix64` のバックエンド。
+///
+/// 64bit の状態を保持する SplitMix64 PRNG。seed をそのまま内部状態の初期値として使い、
+/// 1 回 [`next_u64`](RandBackend::next_u64) を呼ぶたびに state を
+/// `0x9e3779b97f4a7c15` だけ進めてから、xorshift と乗算で撹拌した 64bit 値を出力する。
+/// （上の撹拌は最終出力だけにかかる）
+///
+/// # 計算量
+/// 時間 O(1), 空間 O(1)
+///
+/// # Examples
+///
+/// ```
+/// use atcoder::rand::{Rand, splitmix64::SplitMix64};
+///
+/// let mut rng: Rand<SplitMix64> = Rand::new(42);
+/// assert_eq!(rng.below(100), 13);
+/// ```
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug)]
 pub struct SplitMix64(u64);
 
 impl RandBackend for SplitMix64 {
+    /// `seed` をそのまま state として [`SplitMix64`] を作成する。
+    ///
+    /// `seed` を内部状態の初期値として使い回すため、下書きのエントロピーは
+    /// seed の決め方に依存する。必要なら seed 自体を撹拌してから渡す。
     fn new(seed: u64) -> Self {
         Self(seed)
     }
 
+    /// 64bit 精度で次の乱数を生成する。
+    ///
+    /// state を黄金比の定数 `0x9e3779b97f4a7c15` だけ進め、xorshift 2 段と乗算 2 段で
+    /// 撹拌して出力する。この撹拌は最終出力だけにかかる。
     fn next_u64(&mut self) -> u64 {
         self.0 = self.0.wrapping_add(0x9e3779b97f4a7c15);
         let mut z = self.0;
