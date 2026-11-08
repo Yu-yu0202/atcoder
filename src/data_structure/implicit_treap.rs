@@ -22,10 +22,10 @@
 //! [`reverse`](ImplicitTreap::reverse) は時間 O(log n)。
 //! [`into_vec`](ImplicitTreap::into_vec) / [`to_vec`](ImplicitTreap::to_vec) は時間 O(n)。
 
-use std::ops::{Bound, RangeBounds};
 use crate::math::algebra::{MapMonoid, Reversible};
 use crate::rand::Rand;
 use crate::rand::xoshiro256ss::Xoshiro256StarStar;
+use std::ops::{Bound, RangeBounds};
 
 const NIL: u32 = 0;
 const LAZY: u8 = 1;
@@ -68,11 +68,21 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
     pub fn with_capacity(capacity: usize) -> Self {
         let mut nodes = Vec::with_capacity(capacity + 1);
         nodes.push(Node {
-            ch: [NIL; 2], size: 0, pri: 0, flags: 0,
-            val: M::e(), agg: M::e(), lazy: M::id(),
+            ch: [NIL; 2],
+            size: 0,
+            pri: 0,
+            flags: 0,
+            val: M::e(),
+            agg: M::e(),
+            lazy: M::id(),
         });
 
-        Self { nodes, free: Vec::new(), root: NIL, rng: Rand::new(0x9E37_79B9_7F4A_7C15) }
+        Self {
+            nodes,
+            free: Vec::new(),
+            root: NIL,
+            rng: Rand::new(0x9E37_79B9_7F4A_7C15),
+        }
     }
 
     /// 空の [`ImplicitTreap`] を作成する。
@@ -92,7 +102,9 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
 
     /// 要素数が 0 であるかを判定する。
     #[must_use]
-    pub fn is_empty(&self) -> bool { self.len() == 0 }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
     /// 位置 `i` に要素 `x` を挿入する。
     ///
@@ -213,9 +225,14 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
             self.push(t);
             let [l, r] = self.nodes[t as usize].ch;
             let ls = self.size(l);
-            if i < ls { t = l; }
-            else if i == ls { return self.nodes[t as usize].val.clone(); }
-            else { i -= ls + 1; t = r; }
+            if i < ls {
+                t = l;
+            } else if i == ls {
+                return self.nodes[t as usize].val.clone();
+            } else {
+                i -= ls + 1;
+                t = r;
+            }
         }
     }
 
@@ -282,7 +299,9 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
     /// 時間 O(log n)
     pub fn reverse(&mut self, r: impl RangeBounds<usize>) {
         let (l, h) = self.bounds(r);
-        if h - l <= 1 { return; }
+        if h - l <= 1 {
+            return;
+        }
         let (a, bc) = self.split(self.root, l);
         let (b, c) = self.split(bc, h - l);
         self.toggle(b);
@@ -332,7 +351,9 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
     }
 
     fn collect(&self, t: u32, rev: bool, f: Option<&M::F>, out: &mut Vec<M::S>) {
-        if t == NIL { return; }
+        if t == NIL {
+            return;
+        }
         let n = &self.nodes[t as usize];
 
         let cf: Option<M::F> = match (f, n.flags & LAZY != 0) {
@@ -345,7 +366,9 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
         let crev = rev ^ (n.flags & REV != 0);
 
         let [mut a, mut b] = n.ch;
-        if rev { std::mem::swap(&mut a, &mut b); }
+        if rev {
+            std::mem::swap(&mut a, &mut b);
+        }
 
         self.collect(a, crev, cf.as_ref(), out);
         out.push(match f {
@@ -357,8 +380,13 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
 
     fn alloc(&mut self, x: M::S) -> u32 {
         let node = Node {
-            ch: [NIL; 2], size: 1, pri: self.rng.next_u32(),
-            flags: 0, val: x.clone(), agg: x, lazy: M::id(),
+            ch: [NIL; 2],
+            size: 1,
+            pri: self.rng.next_u32(),
+            flags: 0,
+            val: x.clone(),
+            agg: x,
+            lazy: M::id(),
         };
 
         if let Some(i) = self.free.pop() {
@@ -371,16 +399,24 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
     }
 
     fn all_apply(&mut self, t: u32, f: &M::F) {
-        if t == NIL { return; }
+        if t == NIL {
+            return;
+        }
         let n = &mut self.nodes[t as usize];
         n.val = M::mapping(f, &n.val);
         n.agg = M::mapping(f, &n.agg);
-        n.lazy = if n.flags & LAZY != 0 { M::composition(f, &n.lazy) } else { f.clone() };
+        n.lazy = if n.flags & LAZY != 0 {
+            M::composition(f, &n.lazy)
+        } else {
+            f.clone()
+        };
         n.flags |= LAZY;
     }
 
     fn toggle(&mut self, t: u32) {
-        if t == NIL { return; }
+        if t == NIL {
+            return;
+        }
         let n = &mut self.nodes[t as usize];
         n.ch.swap(0, 1);
         n.agg = M::rev(&n.agg);
@@ -389,7 +425,9 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
 
     fn push(&mut self, t: u32) {
         let fl = self.nodes[t as usize].flags;
-        if fl == 0 { return; }
+        if fl == 0 {
+            return;
+        }
         let [l, r] = self.nodes[t as usize].ch;
         if fl & LAZY != 0 {
             let f = self.nodes[t as usize].lazy.clone();
@@ -405,7 +443,11 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
 
     fn pull(&mut self, t: u32) {
         let [l, r] = self.nodes[t as usize].ch;
-        let (nl, nt, nr) = (&self.nodes[l as usize], &self.nodes[t as usize], &self.nodes[r as usize]);
+        let (nl, nt, nr) = (
+            &self.nodes[l as usize],
+            &self.nodes[t as usize],
+            &self.nodes[r as usize],
+        );
         let size = nl.size + 1 + nr.size;
         let agg = M::op(&M::op(&nl.agg, &nt.val), &nr.agg);
         let n = &mut self.nodes[t as usize];
@@ -414,9 +456,15 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
     }
 
     fn split(&mut self, t: u32, k: u32) -> (u32, u32) {
-        if t == NIL { return (NIL, NIL); }
-        if k == 0 { return (NIL, t); }
-        if k == self.size(t) { return (t, NIL); }
+        if t == NIL {
+            return (NIL, NIL);
+        }
+        if k == 0 {
+            return (NIL, t);
+        }
+        if k == self.size(t) {
+            return (t, NIL);
+        }
         self.push(t);
         let [l, r] = self.nodes[t as usize].ch;
         let ls = self.size(l);
@@ -434,8 +482,12 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
     }
 
     fn merge(&mut self, a: u32, b: u32) -> u32 {
-        if a == NIL { return b; }
-        if b == NIL { return a; }
+        if a == NIL {
+            return b;
+        }
+        if b == NIL {
+            return a;
+        }
         if self.nodes[a as usize].pri > self.nodes[b as usize].pri {
             self.push(a);
             let m = self.merge(self.nodes[a as usize].ch[1], b);
@@ -452,14 +504,22 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
     }
 
     fn fold_rec(&mut self, t: u32, l: u32, r: u32) -> M::S {
-        if t == NIL || l >= r { return M::e(); }
-        if l == 0 && r == self.size(t) { return self.nodes[t as usize].agg.clone(); }
+        if t == NIL || l >= r {
+            return M::e();
+        }
+        if l == 0 && r == self.size(t) {
+            return self.nodes[t as usize].agg.clone();
+        }
         self.push(t);
         let [lc, rc] = self.nodes[t as usize].ch;
         let ls = self.size(lc);
         let mut ans = M::e();
-        if l < ls { ans = self.fold_rec(lc, l, r.min(ls)); }
-        if l <= ls && ls < r { ans = M::op(&ans, &self.nodes[t as usize].val); }
+        if l < ls {
+            ans = self.fold_rec(lc, l, r.min(ls));
+        }
+        if l <= ls && ls < r {
+            ans = M::op(&ans, &self.nodes[t as usize].val);
+        }
         if ls + 1 < r {
             let x = self.fold_rec(rc, l.saturating_sub(ls + 1), r - ls - 1);
             ans = M::op(&ans, &x);
@@ -468,17 +528,26 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
     }
 
     fn apply_rec(&mut self, t: u32, l: u32, r: u32, f: &M::F) {
-        if t == NIL || l >= r { return; }
-        if l == 0 && r == self.size(t) { self.all_apply(t, f); return; }
+        if t == NIL || l >= r {
+            return;
+        }
+        if l == 0 && r == self.size(t) {
+            self.all_apply(t, f);
+            return;
+        }
         self.push(t);
         let [lc, rc] = self.nodes[t as usize].ch;
         let ls = self.size(lc);
-        if l < ls { self.apply_rec(lc, l, r.min(ls), f); }
+        if l < ls {
+            self.apply_rec(lc, l, r.min(ls), f);
+        }
         if l <= ls && ls < r {
             let n = &mut self.nodes[t as usize];
             n.val = M::mapping(f, &n.val);
         }
-        if ls + 1 < r { self.apply_rec(rc, l.saturating_sub(ls + 1), r - ls - 1, f); }
+        if ls + 1 < r {
+            self.apply_rec(rc, l.saturating_sub(ls + 1), r - ls - 1, f);
+        }
         self.pull(t);
     }
 
@@ -486,22 +555,36 @@ impl<M: MapMonoid + Reversible> ImplicitTreap<M> {
         self.push(t);
         let [l, r] = self.nodes[t as usize].ch;
         let ls = self.size(l);
-        if i < ls { self.set_rec(l, i, x); }
-        else if i == ls { self.nodes[t as usize].val = x; }
-        else { self.set_rec(r, i - ls - 1, x); }
+        if i < ls {
+            self.set_rec(l, i, x);
+        } else if i == ls {
+            self.nodes[t as usize].val = x;
+        } else {
+            self.set_rec(r, i - ls - 1, x);
+        }
         self.pull(t);
     }
 
     fn bounds(&self, r: impl RangeBounds<usize>) -> (u32, u32) {
         let n = self.len();
-        let l = match r.start_bound() { Bound::Included(&x) => x, Bound::Excluded(&x) => x + 1, Bound::Unbounded => 0 };
-        let h = match r.end_bound() { Bound::Included(&x) => x + 1, Bound::Excluded(&x) => x, Bound::Unbounded => n };
+        let l = match r.start_bound() {
+            Bound::Included(&x) => x,
+            Bound::Excluded(&x) => x + 1,
+            Bound::Unbounded => 0,
+        };
+        let h = match r.end_bound() {
+            Bound::Included(&x) => x + 1,
+            Bound::Excluded(&x) => x,
+            Bound::Unbounded => n,
+        };
         assert!(l <= h && h <= n);
         (l as u32, h as u32)
     }
 
     #[inline(always)]
-    fn size(&self, t: u32) -> u32 { self.nodes[t as usize].size }
+    fn size(&self, t: u32) -> u32 {
+        self.nodes[t as usize].size
+    }
 }
 
 impl<M: MapMonoid + Reversible> Default for ImplicitTreap<M> {
@@ -511,7 +594,7 @@ impl<M: MapMonoid + Reversible> Default for ImplicitTreap<M> {
 }
 
 impl<M: MapMonoid + Reversible> FromIterator<M::S> for ImplicitTreap<M> {
-    fn from_iter<T: IntoIterator<Item=M::S>>(it: T) -> Self {
+    fn from_iter<T: IntoIterator<Item = M::S>>(it: T) -> Self {
         let it = it.into_iter();
         let mut s = Self::with_capacity(it.size_hint().0);
         let mut stack: Vec<u32> = Vec::new();
@@ -519,17 +602,25 @@ impl<M: MapMonoid + Reversible> FromIterator<M::S> for ImplicitTreap<M> {
             let t = s.alloc(x);
             let mut last = NIL;
             while let Some(&top) = stack.last() {
-                if s.nodes[top as usize].pri >= s.nodes[t as usize].pri { break; }
+                if s.nodes[top as usize].pri >= s.nodes[t as usize].pri {
+                    break;
+                }
                 s.pull(top);
                 last = top;
                 _ = stack.pop();
             }
             s.nodes[t as usize].ch[0] = last;
-            if let Some(&top) = stack.last() { s.nodes[top as usize].ch[1] = t; }
+            if let Some(&top) = stack.last() {
+                s.nodes[top as usize].ch[1] = t;
+            }
             stack.push(t);
         }
-        if let Some(&r) = stack.first() { s.root = r; }
-        while let Some(t) = stack.pop() { s.pull(t); } // 深い方から確定させる
+        if let Some(&r) = stack.first() {
+            s.root = r;
+        }
+        while let Some(t) = stack.pop() {
+            s.pull(t);
+        } // 深い方から確定させる
         s
     }
 }

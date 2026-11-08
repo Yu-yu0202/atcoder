@@ -1,6 +1,6 @@
 //! `SplitMix64` のアルゴリズム
 //!
-//! Steele の SplitMix64 は、64bit のカウンタを黄金比の定数
+//! Steele の `SplitMix64` は、64bit のカウンタを黄金比の定数
 //! `0x9e3779b97f4a7c15`（√5 - 1 を 64bit に近似したもの）だけ進める。
 //! 生成されるビット列を変形する。
 //!
@@ -17,7 +17,7 @@ use crate::rand::RandBackend;
 
 /// `SplitMix64` のバックエンド。
 ///
-/// 64bit の状態を保持する SplitMix64 PRNG。seed をそのまま内部状態の初期値として使い、
+/// 64bit の状態を保持する `SplitMix64` PRNG。seed をそのまま内部状態の初期値として使い、
 /// 1 回 [`next_u64`](RandBackend::next_u64) を呼ぶたびに state を
 /// `0x9e3779b97f4a7c15` だけ進めてから、xorshift と乗算で撹拌した 64bit 値を出力する。
 /// （上の撹拌は最終出力だけにかかる）
