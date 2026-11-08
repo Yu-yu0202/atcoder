@@ -3,6 +3,7 @@
 use crate::ext::range_ext::RangeExt;
 
 pub mod splitmix64;
+pub mod xoshiro256ss;
 
 /// 乱数生成器の trait
 pub trait RandBackend: Sized {
