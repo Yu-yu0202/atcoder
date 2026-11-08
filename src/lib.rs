@@ -12,8 +12,8 @@ pub mod ext;
 pub mod math;
 pub mod rand;
 
-pub(crate) mod macros;
 pub mod geometry;
+pub(crate) mod macros;
 
 #[allow(missing_docs)]
 pub mod prelude {

@@ -1,6 +1,6 @@
+use crate::macros::if_none_return;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
-use crate::macros::if_none_return;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// [`Fraction`] の符号。
@@ -409,7 +409,8 @@ impl AddAssign<Self> for Fraction {
     #[inline(always)]
     #[track_caller]
     fn add_assign(&mut self, rhs: Self) {
-        *self = self.checked_add(rhs)
+        *self = self
+            .checked_add(rhs)
             .expect("Overflow detected in Fraction addition")
     }
 }
@@ -429,7 +430,8 @@ impl SubAssign<Self> for Fraction {
     #[inline(always)]
     #[track_caller]
     fn sub_assign(&mut self, rhs: Self) {
-        *self = self.checked_sub(rhs)
+        *self = self
+            .checked_sub(rhs)
             .expect("Overflow detected in Fraction subtraction")
     }
 }
@@ -449,7 +451,8 @@ impl MulAssign<Self> for Fraction {
     #[inline(always)]
     #[track_caller]
     fn mul_assign(&mut self, rhs: Self) {
-        *self = self.checked_mul(rhs)
+        *self = self
+            .checked_mul(rhs)
             .expect("Overflow detected in Fraction multiplication")
     }
 }
@@ -469,7 +472,8 @@ impl DivAssign<Self> for Fraction {
     #[inline(always)]
     #[track_caller]
     fn div_assign(&mut self, rhs: Self) {
-        *self = self.checked_div(rhs)
+        *self = self
+            .checked_div(rhs)
             .expect("Overflow detected in Fraction division")
     }
 }
