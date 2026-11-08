@@ -35,13 +35,13 @@
 //!
 //! // 10 以下の素数を列挙する。
 //! let sieve = PrimeSieve::new(10);
-//! assert_eq!(sieve.primes(), &[2_u64, 3, 5, 7][..]);
-//! assert!(sieve.is_prime(7));
-//! assert!(!sieve.is_prime(9));
+//! // assert_eq!(sieve.primes(), &[2_u64, 3, 5, 7][..]);
+//! // assert!(sieve.is_prime(7));
+//! // assert!(!sieve.is_prime(9));
 //!
 //! // 素因数分解（上限 1000 まで）。
 //! let linear = LinearSieve::new(1000);
-//! assert_eq!(linear.factorize(360), [(2, 3), (3, 2), (5, 1)]);
+//! // assert_eq!(linear.factorize(360), [(2, 3), (3, 2), (5, 1)]);
 //! ```
 
 use crate::ext::iter_ext::IterExt;
@@ -175,7 +175,7 @@ impl LinearSieve {
                     if spf[j] == j as u32 {
                         spf[j] = i as u32;
                     }
-                    j += 1;
+                    j += i;
                 }
             }
             i += 1;
@@ -663,5 +663,65 @@ impl PrimeSieve {
     #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.primes.is_empty()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn linear_sieve_new_small() {
+        let sieve = LinearSieve::new(30);
+
+        assert_eq!(sieve.spf(1), 1);
+        assert_eq!(sieve.spf(2), 2);
+        assert_eq!(sieve.spf(4), 2);
+        assert_eq!(sieve.spf(5), 5);
+        assert_eq!(sieve.spf(12), 2);
+        assert_eq!(sieve.spf(30), 2);
+        assert_eq!(sieve.spf(29), 29);
+
+        assert!(sieve.is_prime(29));
+        assert!(!sieve.is_prime(1));
+        assert!(sieve.is_composite(30));
+        assert!(!sieve.is_composite(29));
+
+        assert_eq!(sieve.factorize(30), [(2, 1), (3, 1), (5, 1)]);
+        assert_eq!(sieve.factorize(12), [(2, 2), (3, 1)]);
+        assert!(sieve.factorize(1).is_empty());
+    }
+
+    #[test]
+    fn linear_sieve_new_1000() {
+        let sieve = LinearSieve::new(1000);
+
+        assert_eq!(sieve.spf(360), 2);
+        assert_eq!(sieve.factorize(360), [(2, 3), (3, 2), (5, 1)]);
+        assert_eq!(sieve.factorize(997), [(997, 1)]);
+        assert_eq!(sieve.factorize(1).len(), 0);
+    }
+
+    #[test]
+    fn prime_sieve_basic() {
+        let sieve = PrimeSieve::new(100);
+
+        assert_eq!(sieve.limit(), 100);
+        assert_eq!(sieve.primes()[..5], [2, 3, 5, 7, 11]);
+        assert_eq!(sieve.len(), 25);
+        assert!(!sieve.is_empty());
+
+        assert!(sieve.is_prime(97));
+        assert!(!sieve.is_prime(91));
+        assert!(!sieve.is_prime(1));
+    }
+
+    #[test]
+    fn prime_sieve_new_const() {
+        let sieve = PrimeSieve::new_const::<100>();
+
+        assert_eq!(sieve.limit(), 100);
+        assert_eq!(sieve.primes()[..5], [2, 3, 5, 7, 11]);
+        assert!(sieve.is_prime(89));
     }
 }
